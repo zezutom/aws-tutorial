@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Creates a PostgreSQL database instance"
+Parameters:
+  EnvironmentName:
+    Description: Please enter the name of the environment
+    Type: String
+    Default: dev
+  VpcExportPrefix:
+    Description: Prefix for values export from the VPC stack
+    Type: String
+    Default: dev
+  Username:
+    Description: Username for the database
+    Type: String
+  Password:
+    Description: Password for the database
+    Type: String
+Resources:
+  ExampleDBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for example PostgreSQL database
+      VpcId:
+        Fn::ImportValue: !Sub "${VpcExportPrefix}-Id"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: 0.0.0.0/0
+  ExampleDBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for example PostgreSQL database
+      SubnetIds:
+        !Split
+        - ","
+        - Fn::ImportValue: !Sub "${VpcExportPrefix}-PrivateSubnets"
+  ExampleDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      VPCSecurityGroups:
+        - !Ref ExampleDBSecurityGroup
+      DBSubnetGroupName: !Ref ExampleDBSubnetGroup
+      AllocatedStorage: 10
+      StorageType: gp2
+      DBInstanceIdentifier: example-postgres-instance-2
+      DBInstanceClass: db.t3.micro
+      Engine: postgres
+      EngineVersion: 15.3
+      MasterUsername: !Ref Username
+      MasterUserPassword: !Ref Password
+      AllowMajorVersionUpgrade: true
+      PubliclyAccessible: true
+      BackupRetentionPeriod: 1
+      Tags:
+        - Key: Name
+          Value: example-postgres-instance-2

@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  EnvironmentName:
+    Description: Please enter the name of the environment
+    Type: String
+    Default: DEV
+  Username:
+    Description: Username for the database
+    Type: String
+  Password:
+    Description: Password for the database
+    Type: String
+  VpcCIDR:
+    Description: Please enter the IP range (CIDR notation) for this VPC
+    Type: String
+    Default: 10.0.0.0/16
+  PublicSubnet1CIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+    Default: 10.0.4.0/24
+  PublicSubnet2CIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+    Default: 10.0.5.0/24
+  PublicSubnet3CIDR:
+    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
+    Type: String
+    Default: 10.0.6.0/24
+Resources:
+  ExampleDBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for example PostgreSQL database
+      VpcId:
+        Fn::ImportValue: !Sub "${EnvironmentName}-VPC-Id"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: 0.0.0.0/0
+  ExampleDBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for example PostgreSQL database
+      SubnetIds:
+        !Split
+        - ","
+        - Fn::ImportValue: !Sub "${EnvironmentName}-VPC-PublicSubnets"
+  ExampleDBLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Ref ExampleDBParameterGroup
+      RetentionInDays: 7
+  ExampleDBParameterGroup:
+    Type: 'AWS::RDS::DBParameterGroup'
+    Properties:
+      DBParameterGroupName: !Sub "${EnvironmentName}-postgres15"
+      Description:
+        Ref: AWS::StackName
+      Family: postgres15
+      Parameters:
+        log_min_duration_statement: 1000
+  ExampleDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      VPCSecurityGroups:
+        - !Ref ExampleDBSecurityGroup
+      DBSubnetGroupName: !Ref ExampleDBSubnetGroup
+      AllocatedStorage: 10
+      StorageType: gp2
+      DBInstanceIdentifier: example-postgres-instance-2
+      DBInstanceClass: db.t3.micro
+      DBParameterGroupName: !Ref ExampleDBParameterGroup
+      Engine: postgres
+      EngineVersion: 15.3
+      MasterUsername: !Ref Username
+      MasterUserPassword: !Ref Password
+      AllowMajorVersionUpgrade: true
+      PubliclyAccessible: true
+      BackupRetentionPeriod: 1
+      Tags:
+        - Key: Name
+          Value: example-postgres-instance-2

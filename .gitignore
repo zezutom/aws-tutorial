@@ -1,0 +1,10 @@
+/.idea/
+/.run/
+.gradle
+build
+**/.DS_Store
+docker.env
+.run/upheal-server DEV.run.xml
+**/bin/
+**/.openapi-generator
+.terraform
