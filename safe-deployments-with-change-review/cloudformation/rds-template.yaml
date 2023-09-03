@@ -66,7 +66,7 @@ Resources:
       VPCSecurityGroups:
         - !Ref ExampleDBSecurityGroup
       DBSubnetGroupName: !Ref ExampleDBSubnetGroup
-      AllocatedStorage: 10
+      AllocatedStorage: 15
       StorageType: gp2
       DBInstanceIdentifier: example-postgres-instance-2
       DBInstanceClass: db.t3.micro

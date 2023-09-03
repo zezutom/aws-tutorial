@@ -8,3 +8,5 @@ docker.env
 **/bin/
 **/.openapi-generator
 .terraform
+**/terraform.tfstate
+**/terraform.tfstate.backup
